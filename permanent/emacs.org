@@ -1,0 +1,277 @@
+:PROPERTIES:
+:ID:       2079e15f-654a-428f-b198-69bde2ba989c
+:END:
+#+title: Emacs
+
+* Philosophy
+Emacs's philosophy is:
+1. Everything is text.
+2. Integration of the work environment.
+
+* What is Emacs
+Emacs is a text editor, which corresponds to its philosophy: "everything is text".
+
+Emacs is essentially a Lisp interpreter.
+
+* How to learn Emacs
+The essence of learning Emacs is learning a text editor (one that you customize to suit your needs), and learning a text editor is about developing a finger habit. Developing a habit is not something that happens overnight; it requires constant repetition.
+
+* Concepts
+
+** Buffer
+In Emacs, a buffer is the fundamental unit of text you work with. It's the "thing" that holds the text you are editing or viewing. Almost everything you do in Emacs happens inside a buffer.
+
+In Emacs, we do not edit a file directly, instead, we edit the buffer with that file. If a file is the data you saved on your disk, a buffer is the live, editable copy of that data inside Emacs' memory. In this case, the buffer name is same as the file name. You edit the text in the buffer and when you save the buffer, the content of the buffer will be written into the file.
+
+A buffer can contain the contents of a file, but it doesn't have to. You can have temporary buffers for notes, scratch, command output, help text, etc. In this case, the buffer name has the format with a asterisk (*) in the beginning and the end added.
+
+Each buffer has one major mode (like Python mode, Org mode, or Fundamental mode) that defines its core behavior (syntax highlighting, indentation, keybindings). It can also have multiple minor mode that add or modify specific features.
+
+** Mode
+An Emacs mode is a set of rules and behaviors that customize Emacs for editing a particular type of text. Emacs becomes sensitive to the task at hand. It tailors the editor to understand your context, making you more productive.
+
+
+*** Major Mode
+Our editing tasks are divers, and we cannot incorporate all functions into the current editing task because the features required for different tasks vary significantly.
+
+For example, when writing Python code, we may need to move the cursor between functions and classes, select functions, classes, comment out code, use code completion, execute code, debug code, and so on. These features are essential for Python programming but unnecessary when writing articles.
+
+We consolidate functions for specific editing tasks into a major mode. When a buffer is in a particular major mode, all functions within that mode become available. Major modes enable Emacs to better focus on the current editing task. It fundamentally changes Emacs' behavior to suit a specific language or task.
+
+There is always exactly one major mode active in a buffer. 
+
+*** Minor Mode
+Some features are universally applicable but not needed by everyone. In such cases, we can group specific general-purpose functions into a minor model. We can enable this minor mode when needed and disable it when not required. It adds or tweaks a specific feature.
+
+
+You can have multiple minor modes active at the same time.
+
+
+** Backup Files
+Emacs automatically creates backup files to protect you from accidentally losing data when you save changes to an existing file.
+
+By default, Emacs creates backups by appending a tilde (~) to the original filename.
+- Original file: my-document.txt
+- Backup file: my-document.txt~
+
+
+It works as follows:
+1. When you edit a file my-document.txt, Emacs loads it into a buffer.
+2. When you save changes for the first time, Emacs rename the original my-document.txt on disk to my-document.txt~ (this is controled by backup-by-copying).
+3. It then writes the contents of you buffer to a new my-document.txt file.
+
+
+By default, a new backup is only created the first time you save a session. Subsequent saves within the same Emacs session overwrite the original file without creating a new backup. Some configurations use numbered backups to keep multiple versions. You can also disable backup files or change backup file location with Emacs customization.
+
+
+** Auto Save Files
+Emacs automatically and temporarily saves your work at regular intervals to protect you from losing data due to crashes, power outages, or accidental closure.
+
+
+Auto-save files are distinguished by having a hash symbol # at both the beginning and the end of the filename.
+- Original file: my-document.txt
+- Auto-save file: #my-document.txt#
+
+
+The auto-save file is deleted when you properly save the file with C-x C-s.
+
+If Emacs crashes or is killed, it will automatically offer to recover the file from the auto-save file the next time you open it.
+
+** Cursor
+In Emacs, the cursor is the visual marker that shows your current insertion point in the buffer - the place where text will appear when you type.
+It is usually a blinking block or underscore. It is positioned directly over characters.
+
+** Kill Ring
+The kill-ring is Emacs' unified clipboard history. It's a list that stores all the text you have "killed" (cut) or "saved" (copied). Unlike a single clipboard, it retains multiple items.
+
+In Emacs terminology, "kill" means to cut (remove text and save it to the kill-ring) and "yank" means paste (insert text from kill-ring). It's called a "ring" because it's circular. It's called unified storage because both explicit "copy" commands and "cut" commands add text to the same kill-ring.
+
+
+If you perform several kills in quick successsion without any other commands in between, Emacs will append the together into a single, large entry in the kill-ring.
+
+
+Only deletion made with Del and C-d (without a numeric argument) are excluded from the kill-ring, all other deletions are stored.
+
+** Bindings
+Binding associates a key sequence (what you press) with a command (what gets executed).
+
+*** Keymap
+The data structures that store the mappings between keys and commands. Think of them as "dictionaries" or "lookup tables."
+
+
+When you press a key, Emacs searches through multiple keymaps in a specific order:
+1. Overriding Keymaps   (Highest priority - can override everything)
+2. Minor Mode Keymaps   (Text-mode, Auto-fill, Company, etc.)
+3. Major Mode Keymap    (Python-mode, Org-mode, Fundamental-mode)
+4. Global Keymap        (Lowest priority - universal bindings)
+
+
+* Common Bindings
+In Emacs, Commonly used functions are bound to key bindings. In the key bindings, C stands for control key and M stands for Meta key.
+
+The key bindings designed with the following convention:
+1. The most commonly used commands (such as cursor movement commands) are bound to C-n (where n is any character).
+2. Slightly less commonly used commands are bound to M-n.
+3. Other commonly used commands are bound to C-x something (C-x followed by something else—one or more characters or another control sequence).
+4. Some specialized commands are bound to C-c something. These commands often relate to one of the more specialized modes, such as Java mode or HTML mode.
+5. You can get at the remaining commands by typing M-x long-command-name Enter. (This works for any command really.)
+
+
+
+** Basic
+- [X] C-x C-c :: Exit Emacs.
+- [X] C-x C-f :: Open or create a file.
+
+** Buffers
+- [X] C-x C-s :: Save current buffer.
+- [X] C-x s :: Save some modified file-visiting buffers.
+- [X] C-x C-w :: Write current bufer into another file.
+- [X] C-x b :: Switch to another buffer.
+- [X] C-x k :: Kill current buffer or speicfied buffer.
+- [X] C-x C-q :: Change whether the current buffer is read-only.
+- [X] C-x C-b :: Display a list of existing buffers.
+
+In dired (directory editor) mode, C-x C-q is very useful. You can directly modify the file names and press C-c C-c to execute them. This is very convenient for batch modification of file names.
+
+
+** Windows
+
+- [X] C-x o :: Switch to next window (Rarely used after adopting ace-window).
+- [X] C-x 0 :: Delete current window.
+- [X] C-x 1 :: Delete other windows.
+- [X] C-x 2 :: Split current window horizontally.
+- [X] C-x 3 :: Split current window vertically .
+
+
+
+** Frames
+- [X] C-x 5 2 :: Create a new frame.
+- [X] C-x 5 o :: Switch to next frame.
+- [X] C-x 5 0 :: Close current frame.
+- [X] C-x 5 1 :: Close other frames.
+
+** Cursor Navigation
+
+- [X] C-f :: Move forward one character.
+- [X] C-b :: Move backward one character.
+- [X] C-n :: Move to next line.
+- [X] C-p :: Move to previous line.
+- [X] M-f :: Move forward one word.
+- [X] M-b :: Move backward one word.
+- [X] C-a :: Move to beginning of line.
+- [X] C-e :: Move to end of line.
+- [X] M-m :: Move to first non-whitespace character of line.
+- [X] M-a :: Move to beginning of sentence.
+- [X] M-e :: Move to end of sentence.
+- [X] M-{ :: Move to beginning of paragraph.
+- [X] M-} :: Move to end of paragraph.
+- [X] C-v :: Scroll down one screen.
+- [X] M-v :: Scroll up one screen.
+- [X] C-l :: Recenter screen with current line in middle.
+- [X] M-< :: Move to beginning of buffer.
+- [X] M-> :: Move to end of buffer.
+
+
+
+** Deletion
+- [X] Del :: Delete previous character (backward).
+- [X] C-d :: Delete current character (forward).
+- [X] M-Del :: Delete from word start to cursor position (backward kill word).
+- [X] M-d :: Delete from cursor to word end (forward kill word).
+- [X] C-k :: Delete from cursor to end of line (kill line).
+- [X] M-k :: Delete from cursor to end of sentence (kill sentence).
+
+C-k supports prefix arguments:
+- With prefix 0 (C-u 0): Delete from beginning of line to cursor position.
+- With negative prefix (e.g. C-- 3): Kill backward specified number of lines (backward kill 3 lines).
+- With positive prefix (e.g. C-u 3): Kill forward specified number of lines (forward kill 3 lines).
+
+
+
+** Region Operations
+
+Setting a region:
+- [X] C-SPC or C-@ :: Set mark at current point position.
+- [X] C-x C-x :: Exchange point and mark positions (useful for verifying selected region).
+- [X] M-h :: Select current paragraph as region.
+- [X] C-x h :: Select entire buffer as region.
+
+Operations on region:
+- [X] C-w :: Cut (kill) region.
+- [X] M-w :: Copy (kill-ring-save) region.
+- [X] C-y :: Paste (yank) most recently cut or copied region.
+
+
+
+** Swap Text
+
+- [X] C-t :: Swap the characters on either side of point, and move cursor to the next character.
+- [X] M-t :: Swap the words on either side of point, and move cursor to the next word.
+- [X] C-x C-t :: Swap the current line with the previous line, and move cursor to the next line.
+
+
+** Case Conversion
+- [X] M-l :: Convert from current character to end of word to lowercase.
+- [X] M-u :: Convert from current character to end of word to uppercase.
+- [X] M-c :: Convert current character to uppercase, and the rest to end of word to lowercase.
+
+
+** Rectangle
+
+r stands for rectangle in the following bindings.
+
+- [X] C-x r k :: Kill rectangular region (content behind the region shifts leftward).
+- [X] C-x r c :: Clear rectangular region (content behind the region remains in place) (not saved to kill-ring).
+- [X] C-x r o :: Insert empty rectangular region, pushing existing content rightward.
+- [X] C-x r t :: Replace rectangular region with specified string.
+- [X] C-x r y :: Yank (paste) most recently killed rectangular region.
+
+
+** Search And Replace
+- [X] C-s :: Incremental search forward.
+- [X] C-r :: Incremental search backward.
+- [ ] C-u C-s :: Incremental regular expression search.
+- [X] M-% :: Query replace.
+- [X] C-u M-% :: Query replace whole words (surrounded by word delimiters).
+- [ ] C-M-% :: Query replace using regular expressions.
+
+You can use C-h k C-s to learn how to use incremental search commands.
+
+
+** Macro
+
+*** Session Only Macro
+
+**** Defining a Macro
+Use ~C-(~ to start macro definition, and ~C-)~ to end macro definition.
+
+**** Executing a Macro
+~C-x e~ executes the most recently defined macro.
+~C-x C-k r~ applies the defined macro to all lines in the current region.
+
+**** Editing a Macro
+To modify a previously defined macro, use the command ~C-x C-k e~.
+
+**** Macro Ring
+You can define multiple macros, which are saved in the macro ring. Use ~C-x C-k n~ (move to previous macro in the ring) and ~C-x C-k p~ (move to next macro in the ring) to select which macro to invoke.
+
+*** Reusing a Macro
+If you have a macro that you'll use frequently, you can save it for future use.
+
+Steps:
+1. Define a macro.
+2. Use ~C-x C-k n~ to name the most recently defined macro.
+3. Use ~C-x C-f~ to open a file.
+4. Use ~M-x insert-kbd-macro Enter <macro name> Enter~ to insert the macro into the file.
+5. Add ~(load-file "<your macro file>")~ to Emacs' configration file - this configuration automatically loads the file when Emacs starts.
+6. Add ~(global-set-key "\C-x\C-k<your key>"'<your macro name>)~ to Emacs' configuration file - this configuration binds the macro for quick access.
+
+*** Macro With a Variable Part
+You can define a template where certain parts are variable.
+
+Definition method:
+When defining a macro, use the command ~C-u C-x q~ to enter recursive edit mode. You can tell you're in recursive edit mode when square brackets appear in the mode line. In this mode, anything you type won't be recorded in the macro. Use ~C-M-c~ to exit this mode.
+
+
+** Geting Help
+C-h C-h
