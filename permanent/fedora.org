@@ -1,0 +1,18 @@
+* Tweaks
+Tweaks 是高级的配置工具，允许你配置更多的 Linux 的环境。
+
+#+begin_src shell
+  sudo dnf install gnome-tweaks
+#+end_src
+
+* Dock
+类似 MacOS 和 Windows 的最下面显示已经打开的软件的工具栏，我们可以在 Gnome 中配置类似的功能。
+
+首先安装 Extension Manager：
+#+begin_src shell
+  sudo dnf install gnome-extensions-app
+#+end_src
+
+然后打开 Extension Manager，搜索 Dash to Dock 并进行安装。
+
+
