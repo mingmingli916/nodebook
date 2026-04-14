@@ -1,0 +1,243 @@
+This article primarily describes the minimal installation of Arch.
+
+* Pre-installation Preparation
+** Creating Bootable Media
+1. Download the image file (.iso) and corresponding signature (.iso.sig) from https://archlinux.org/download.
+2. Verify image integrity: ~gpg --verify archlinux-2025.08.01-x86_64.iso.sig archlinux-2025.08.01-x86_64.iso~.
+3. Locate your USB device.
+4. Write image to USB: ~sudo dd if=archlinux-2025.08.01-x86_64.iso. of=/dev/disk2 status=progress~
+
+
+** Booting The System
+1. Restart the computer where Arch Linux will be installed.
+2. Press F12 (for Dell laptops) during startup to enter boot options interface.
+3. Disable secure boot.
+4. Select booting from USE device.
+
+
+
+
+** Verify Boot Mode
+Check boot mode using the following command:
+#+begin_src shell
+  cat /sys/firmware/efi/fw_platform_size
+#+end_src
+
+- Returns 64: indicates 64-bit UEFI boot
+- Returns 32: indicates 32-bit UEFI boot
+- Returns "No such file or directory": indicates BIOS boot
+
+** Network Connection
+Steps to configure network connection:
+1. Ensure network interface is working properly.
+   #+begin_src shell
+   ip link
+   #+end_src
+2. For wireless networks, ensure network card is not disabled (use rfkill command).
+3. Authenticate Wi-Fi using iwctl.
+4. Configure network connection.
+5. Test connection using ping.
+
+*** Rfkill
+Many laptops have a hardware button (or switch) to turn off the wireless card; however, the card can also be blocked by the kernel. This can be handled by rfkill(8).
+
+To show the current status:
+#+begin_example
+$ rfkill
+ID TYPE     DEVICE SOFT    HARD
+0 bluetooth hci0  unblocked unblocked
+1 wlan      phy0  unblocked unblocked
+#+end_example
+
+If the card is hard-blocked, use the hardware button (switch) to unblock it. If the card is not hard-blocked but soft-blocked, use the following command:
+#+begin_src shell
+  rfkill unblock wlan
+#+end_src
+
+*** Iwctl
+To get an interactive prompt:
+#+begin_src shell
+  iwctl
+#+end_src
+
+The interactive prompt is then displayed with a prefix of [iwd]#.
+
+To list all available commands:
+#+begin_src shell
+  [iwd]# help
+#+end_src
+
+My laptop is connected via Wi-Fi:
+#+begin_src shell
+  [iwd]# device list
+  [iwd]# station wlan0 scan
+  [iwd]# station wlan0 get-networks
+  [iwd]# station wlan0 connect minglin
+#+end_src
+
+My Wi-Fi name is minglin.
+
+
+** Update System Clock
+In Arch Linux live system, systemd-timesyncd is started by default and will synchronize the time automatically once connected to the internet.
+
+Use timedatectl(1) to ensure the system clock is synchronized:
+#+begin_src shell
+  timedatectl
+#+end_src
+
+** Partitioning The Disk
+First, identify storage devices using fdisk:
+#+begin_src shell
+  fdisk -l
+#+end_src
+
+My storage device is: /dev/nvme0n1
+
+Second, patition the disk:
+#+begin_src shell
+  fdisk /dev/nvme0n1
+
+  # n
+  # Enter
+  # Enter
+  # +1G
+
+  # n
+  # Enter
+  # Enter
+  # +16G
+
+  # n
+  # Enter
+  # Enter
+  # Enter
+
+  # t
+  # 1
+  # uefi
+#+end_src
+
+I have three partitions:
+| Mount Point | Partition                 | Specific Partition |      |
+|-------------+---------------------------+--------------------+------|
+| /boot       | ~/dev/efi_system_partition~ | /dev/nvme0n1p1     | 1G   |
+| [swap]      | =/dev/swap_partition=       | /dev/nvme0n1p2     | 16G  |
+| =/=           | =/dev/root_partition=       | /dev/nvme0n1p3     | rest |
+
+** Format Partitions
+#+begin_src shell
+  mkfs.fat -F 32 /dev/nvme0n1p1
+  mkswap /dev/nvme0n1p2
+  mkfs.ext4 /dev/nvme0n1p3
+#+end_src
+
+** Mount Partitions
+
+#+begin_src shell
+  mount /dev/nvme0n1p3 /mnt
+  mount --mkdir /dev/nvme0n1p1 /mnt/boot
+  swapon /dev/nvme0n1p2
+#+end_src
+
+* Install Arch Linux
+Install essential packages:
+#+begin_src shell
+  pacstrap -K /mnt base linux linux-firmware
+#+end_src
+
+Additional packages that will be used later:
+#+begin_src shell
+  pacstrap -K /mnt vim systemd iwd dhcpcd
+#+end_src
+
+- vim: text editor for editing configuration files.
+- systemd: the init system and service manager for modern Linux systems.
+- iwd: for network connection.
+- dhcpcd: for dynamic ip address allocation.
+
+* Configure System
+
+** fstab
+Generate fstab file to automatically mount required file systems at booting process:
+#+begin_src shell
+  genfstab -U /mnt >> /mnt/etc/fstab
+#+end_src
+
+** chroot
+Change root into the new system to interact directly with the installed Arch Linux environment, tools, and configurations:
+#+begin_src shell
+  arch-chroot /mnt
+#+end_src
+
+** Time Configuration
+Set timezone for better time readability:
+#+begin_src shell
+  ln -sf /usr/share/zoneinfo/Canada/Eastern /etc/localtime
+#+end_src
+
+Run hwclock(8) to generate /etc/adjtime:
+#+begin_src shell
+  hwclock --systohc
+#+end_src
+
+** Localization
+Edit /etc/locale.gen and uncomment the UTF-8 locales you will be using for proper region and language specific formatting:
+#+begin_src shell
+  locale-gen
+#+end_src
+
+I uncomment the following parts:
+#+begin_example
+en_US.UTF-8 UTF-8
+en_CA.UTF-8 UTF-8
+fr_CA.UTF-8 UTF-8
+zh_CN.UTF-8 UTF-8
+#+end_example
+
+Create the locale.conf(5) file and set the LANG variable:
+#+caption: /etc/locale.conf:
+#+begin_example
+LANG=en_CA.UTF-8
+#+end_example
+
+** Hostname
+Create hostname file to assign a consistent, identifiable name to your system:
+#+caption: /etc/hostname
+#+begin_example
+mml
+#+end_example
+
+
+
+** Root Password
+Set a secure password for the root user:
+#+begin_src shell
+  passwd
+#+end_src
+
+** Install And Configure Bootloader
+Here I use GRUB as my laptop bootloader.
+
+Install necessary packages:
+#+begin_src shell
+  pacman -S grub efibootmgr dosfstools os-prober mtools
+#+end_src
+
+Deploy GRUB to EFI partition:
+#+begin_src shell
+  grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
+#+end_src
+
+Generate main GRUB configuration file:
+#+begin_src shell
+  grub-mkconfig -o /boot/grub/grub.cfg
+#+end_src
+
+If you see "Found linux image..." and "Found initrd image..." in the output, your Arch Linux system has been successfully detected.
+
+* Reboot
+
+1. Exit chroot environment using exit command
+2. Unmount mount points: ~umount -R /mnt~
+3. Restart using reboot command
