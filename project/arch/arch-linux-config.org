@@ -1,15 +1,18 @@
 After Arch Linux installation, we get a minimal Arch Linux operating system.
 Here we focuse on how to expand its functionality after installation, turning it into an operating system that is tailored to you and meets your daily needs.
-* version-control
+
+* Version Control
 Git is used for version control.
 
 #+begin_src shell
   sudo pacman -S git
 #+end_src
-* windows-manager
+
+* Windows Manager
 
 DWM is a window manager.
-** install-base-graphical-system
+
+** Install the Base Graphical System
 Frist, install the most basic graphical server and drivers.
 
 #+begin_src shell
@@ -19,7 +22,8 @@ Frist, install the most basic graphical server and drivers.
   # For AMD
   sudo pacman -S mesa vulkan-radeon 
 #+end_src
-** install-dwm
+
+** Install DWM
 #+begin_src shell
   # Create a directory for source code.
   mkdir ~/src
@@ -43,53 +47,26 @@ If you encounter an error that `make` is not found, it's because Arch Linux foll
 #+begin_src shell
   sudo pacman -S base-devel
 #+end_src
-** configure-startup-file
+
+** Configure the Startup File
 Create or edit the ~/.xinitrc file. This is the script that starts the graphical interface:
+
 #+caption: ~/.xinitrc
 #+begin_src shell
   # Start dwm.
   exec dwm
 #+end_src
 
-** start-the-graphical-interface
-
+** Start the Graphical Interface
 Enter the following command in the terminal:
 #+begin_src shell
   startx
 #+end_src
 
 
-** configure-dwm-status-bar
-Create a script file in a suitable location, for example:
-#+CAPTION: ~/.scripts/dwm_statusbar.sh
-#+begin_src shell
-  #!/bin/bash
-  while true; do
-      datetime=$(date "+%H:%M")
-
-      # set status with xsetroot
-      xsetroot -name "$datetime"
-
-      sleep 1
-  done
-#+end_src
 
 
-Add execute permissions:
-#+begin_src shell
-  chmod +x ~/.scripts/dwm_statusbar.sh
-#+end_src
-
-Modify the DWM startup configuration by adding the following line to `~/.xinitrc` *before* starting dwm:
-#+CAPTION: ~/.xinitrc
-#+begin_src shell
-  # Set dwm status bar.
-  ~/.scripts/dwm_statusbar.sh &
-#+end_src
-
-
-
-** windows-key-as-meta
+** Windows Key As Meta
 Modifier the config.h in dwm source directory.
 In the line 49:
 #+begin_src c
@@ -98,8 +75,46 @@ In the line 49:
   #define MODKEY Mod4Mask
 #+end_src
 
-* web-brower
-** firefox
+** Status Bar
+dwmblocks-async is used for status bar.
+*** Installation
+Clone this repository, modify config.h appropriately, then compile the program:
+#+begin_src shell
+  git clone https://github.com/UtkarshVerma/dwmblocks-async.git
+  cd dwmblocks-async
+  vi config.h
+  sudo make install  
+#+end_src
+
+*** Usage
+To set dwmblocks-async as your status bar, you need to run it as a background process on startup. One way is to add the following to ~/.xinitrc:
+#+begin_src shell
+  # The binary of `dwmblocks-async` is named `dwmblocks`
+  dwmblocks &  
+#+end_src
+
+*** Modifying the Blocks
+You can define your status bar blocks in config.h:
+#+begin_src C
+  #define BLOCKS(X)				\
+      ...
+      X("", "wpctl get-volume @DEFAULT_AUDIO_SINK@ | cut -d' ' -f2", 0, 5) \
+      X("", "date '+%H:%M:%S'", 1, 1) \
+      ...  
+#+end_src
+
+Each block has the following properties:
+
+| Property        | Description                                                                                                                                      |
+|-----------------+--------------------------------------------------------------------------------------------------------------------------------------------------|
+| Icon            | An icon you wish to prepend to your block output.                                                                                                |
+| Command         | The command you wish to execute in your block.                                                                                                   |
+| Update interval | Time in seconds, after which you want the block to update. If 0, the block will never be updated.                                                |
+| Update signal   | Signal to be used for triggering the block. Must be a positive integer. If 0, a signal won't be set up for the block and it will be unclickable. |
+
+
+* Web Brower
+** Firefox
 #+begin_src shell
   sudo pacman -S firefox
 #+end_src
@@ -109,52 +124,13 @@ During the installation process, you will encounter two dependency options:
     Choose between 1) `jack` and 2) `pipewire-jack` based on your specific setup and needs.  
 2.  Dependencies for font-related functions:
     It is recommended to select `noto-fonts`.
-** google-chrome
-*** installation
-Recommended to install from the AUR:
-#+begin_src shell
-  yay -S google-chrome  
-#+end_src
-*** launching
-Start Chrome:
-#+begin_src shell
-  google-chrome-stable
-#+end_src
 
-After startup, you might can not click in chrome because:
-- Chrome enables GPU hardware acceleration by default to improve rendering performance.
-- DWM, being a minimal window manager, might lack comprehensive GPU acceleration compatibility.
-- Conflicts in GPU resource access between them can prevent input events from being processed correctly.
-
-You can launch it with GPU disabled:
-#+begin_src shell
-  google-chrome-stable --disable-gpu
-#+end_src
-
-
-For easier desktop launching, use a wrapper script approach:
-#+CAPTION: /usr/local/bin/chrome-no-gpu
-#+begin_src shell
-  #!/bin/bash
-  exec google-chrome-stable --disable-gpu "$@"
-#+end_src
-
-Add execute permissions:
-#+begin_src shell
-  sudo chmod +x /usr/local/bin/chrome-no-gpu
-#+end_src
-
-You can then type chrome-no-gpu in dmenu to launch Chrome with the parameters.
-
-*** upower-issue
-Chrome queries battery information by default using upower. If upower is not installed, it will report battery-related errors, but this does not affect functionality. This can also be resolved by installing upower.
-
-* chinese-input
+* Chinese Input
 Fcitx5 is used to input Chinese.
 The stack is: Fcitx5 + Chinese input engine.
 
 
-** install-required-packages
+** Install Required Packages
 #+begin_src shell
   sudo pacman -S fcitx5 fcitx5-configtool fcitx5-gtk fcitx5-qt fcitx5-chinese-addons
   # chinese fonts support
@@ -167,7 +143,7 @@ The stack is: Fcitx5 + Chinese input engine.
   fc-cache -fv
 #+end_src
 
-** set-environment-variables
+** Set Environment Variables
 
 To allow applications to recognize and use Fcitx5, add the following variables to your shell startup file.
 Since DWM is typically launched via ~/.xinitrc, edit this file and add the lines at the very beginning (before any exec command):
@@ -178,14 +154,14 @@ Since DWM is typically launched via ~/.xinitrc, edit this file and add the lines
 #+end_src
 
 
-** autostart-fcitx5
+** Autostart fcitx5
 Add the following line right before ~exec dwm~ in your ~/.xinitrc:
 #+begin_src shell
   fcitx5 -d &
 #+end_src
 
 
-** restart-dwm
+** Restart DWM
 The simplest way to apply the environment variables and autostart settings is to fully log out and log back in.
 
 ** configure-input-method
@@ -198,7 +174,7 @@ The simplest way to apply the environment variables and autostart settings is to
 
 You can now open an application (e.g., a browser) and press Ctrl + Space to switch input methods.
 
-** warning
+WARNING:
 If you can not input Chinese in Emacs but can in Firefox, check the following command:
 #+begin_src shell
   locale -a
@@ -227,19 +203,19 @@ Then generate:
 #+end_src
 
 
-* ssh
+* SSH
 #+begin_src shell
   sudo pacman -S openssh
 #+end_src
 
 
-* zsh
+* Zsh
 #+begin_src shell
   sudo pacman -S zsh
   sudo pacman -S which
 #+end_src
 
-** set-zsh-as-default-shell
+** Set Zsh As Default Shell
 
 Change the default shell for the current user:
 #+begin_src shell
@@ -249,10 +225,10 @@ Change the default shell for the current user:
 You'll be prompted for your password.
 Log out completely and log back in (or restart) for the change to take effect.
 
-** first-time-setup
+** First Time Setup
 On first launch, Zsh provides a simple configuration menu. Most users skip this step in favor of more powerful frameworks like Oh My Zsh.
 
-** install-oh-my-zsh-framework
+** Install oh-my-zsh Framework
 #+begin_src shell
   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 #+end_src
@@ -260,7 +236,7 @@ On first launch, Zsh provides a simple configuration menu. Most users skip this 
 The script automatically backs up any existing ~/.zshrc and creates a new one.
 
 
-** configure-oh-my-zsh
+** Configure oh-my-zsh
 Edit ~/.zshrc for personalization:
 #+begin_src shell
   ZSH_THEME="simple"
@@ -273,7 +249,7 @@ Edit ~/.zshrc for personalization:
 - z: Intelligent directory jumping
 
 
-** install-enhanced-plugins
+** Install Enhanced Plugins
 These provide significantly improved command line experience:
 #+begin_src shell
   # Syntax highlighting - valid commands green, invalid red
@@ -295,106 +271,35 @@ Update plugins list in ~/.zshrc:
   )
 #+end_src
 
-* keyboard-remapping
+* Keyboard Remapping
 
-** remap-caps-lock-to-control-in-tty
-
-*** install-required-tools
-#+begin_src shell
-  sudo pacman -S kbd
-#+end_src
-
-*** edit-custom-keymap-file
-
-#+begin_src shell
-  # create custom keymap file
-  dumpkeys > ~/my_custom_keymap
-
-  # edit the file to locate the Caps Lock line (typically keycode 58)
-  emacs ~/my_custom_keymap
-
-  # change this line
-  keycode 58 = Cap_Lock
-  # to
-  keycode 58 = Control
-#+end_src
-
-
-*** rest-and-load-new-mapping
-#+begin_src shell
-  sudo loadkeys ~/my_custom_keymap
-#+end_src
-
-Test immediately - Caps Lock should now function as Control.
-
-
-
-*** make-changes-permanent-via-systemd-service
-Copy keymap to system directory:
-(The specific path may vary depending on your architecture and keyboard layout.)
-#+begin_src shell
-  sudo cp ~/my_custom_keymap /usr/share/kbd/keymaps/i386/qwerty/
-#+end_src
-
-
-
-Create systemd service file /etc/systemd/system/loadkeys.service:
-#+begin_example
-[Unit]
-Description=Load custom keymap for console
-After=systemd-vconsole-setup.service
-Before=graphical.target
-
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/loadkeys /usr/share/kbd/keymaps/i386/qwerty/my_custom_keymap
-RemainAfterExit=yes
-StandardInput=tty
-StandardOutput=tty
-
-[Install]
-WantedBy=multi-user.target     
-#+end_example
-
-
-Enable the service:
-#+begin_src shell
-  sudo systemctl enable loadkeys.service
-#+end_src
-
-
-
-** remap-caps-lock-in-graphical-environment
 For DWM users, add to ~/.xinitrc before the exec dwm line:
 #+begin_src shell
   setxkbmap -option ctrl:nocaps
 #+end_src
 
-
 Save the file and completely log out and back into DWM. Caps Lock will now function as Control throughout the graphical environment.
 
-* connecting-a-bluetooth-keyboard
+* Connecting a Bluetooth Keyboard
 
 
-** install-necessary-packages
+** Install Necessary Packages
 #+begin_src shell
   sudo pacman -S bluez bluez-utils
 #+end_src
 
 bluez-utils provides tools like bluetoothctl.
 
-** start-and-enable-bluetooth-service
+** Start And Enable Bluetooth Service
 #+begin_src shell
   sudo systemctl enable --now bluetooth
 #+end_src
 
-** ensure-the-bluetooth-adapter-is-not-blocked
-Run `rfkill list` to check. If Bluetooth is soft blocked, use `rfkill unblock bluetooth` to unblock it.
+Run `rfkill list` to check. If bluetooth is soft blocked, use `rfkill unblock bluetooth` to unblock it.
 
-** put-the-keyboard-into-pairing-mode
-Different keyboards have different methods for this.
+Put the keyboard into pairing mode. Different keyboards have different methods for this.
 
-** pairing-and-connecting
+** Pairing And Connecting
 
 Run the following commands in the terminal:
 #+begin_src shell
@@ -441,13 +346,11 @@ To pari, trust and connect with enter interactive mode:
   bluetoothctl connect AA:BB:CC:DD:EE:FF
 #+end_src
 
-* connecting-an-external-monitor
-
+* Connecting an External Monitor
 
 I have an external monitor that I use as my primary display. I usually keep the laptop lid closed so the built-in screen does not output any content.
 
-** install-the-corresponding-graphics-drivers
-
+** Install The Corresponding Graphics Drivers
 Identify your graphics hardware:
 #+begin_src shell
   lspci | grep -E "VGA|3D}Display"
@@ -463,14 +366,13 @@ For AMD:
   sudo pacman -S mesa vulkan-radeon 
 #+end_src
 
-** install-xorg
 If xorg is not installed, install it.
 #+begin_src shell
   sudo pacman -S xorg xorg-xinit
 #+end_src
 
 
-** monitor-setup
+** Monitor Setup
 
 First, use `xrandr` to identify the names of your laptop screen and external monitor. Mine are `eDP-1` and `HDMI-1`.
 
@@ -482,9 +384,8 @@ Then, configure them using the following command:
 You can add the above command to the startup script for your graphical interface (e.g., in the `.xinitrc` file) before the `exec dwm` command.
 
 
-On Framwork laptop, the laptop screen is eDP-1 and the miniter is DP-4.
 
-* network-configuration
+* Network Configuration
 First use iwctl to connect to internet.
 
 #+begin_src shell
@@ -521,7 +422,7 @@ Connect to a network:
   nmcli --ask device wifi connect "SSID name"
 #+end_src
 
-* backing-up-to-a-remote-computer
+* Backing to a Remote Computer
 
 Rsync is used for incremental backups.
 
@@ -530,13 +431,13 @@ Rsync is used for incremental backups.
 #+end_src
 
 
-Back up the local folder (info) to another laptop (mac):
+Backup the local folder (info) to another laptop (mac):
 #+begin_src shell
    rsync -avz --progress ~/info li@mac:~/arch-backup/info/
 #+end_src
 
 
-* automating-scheduled-commands
+* Automating Scheduled Commands
 #+begin_src shell
   # install
   sudo pacman -S cronie
@@ -573,25 +474,42 @@ View scheduled tasks:
   crontab -l
 #+end_src
 
-* file-manager
-PCManFM is an extremely lightweight and fast file manager, ideal for low-resource systems or LXQt desktop users.
+* File Manager
+
+** GUI
+PCManFM is an extremely lightweight and fast GUI file manager, ideal for low-resource systems or LXQt desktop users.
 
 
 #+begin_src shell
   sudo pacman -S pcmanfm  
 #+end_src
 
+** Terminal File Manager
+lf (List Files) is written in Go, heavily inspired by ranger, but removes Python's bloat, and perfectly aligns with the "Suckless" philosophy.
 
-* tree
+#+begin_src shell
+  sudo pacman -S lf
+  # Used by TUI file managers to enhance file preview functionality,
+  # especially for displaying images, PDFs, and video thumbnails in
+  # the terminal, as well as extracting file metadata.
+  sudo pacman -S ueberzugpp ffmpegthumbnailer poppler file imagemagick  
+#+end_src
+
+
+The configuration file is ~/.config/lf/lfrc.
+You can create the lf directory and lfrc configuration file.
+
+
+* The Command tree
 Use ~tree~ for better directory visualization.
 
 #+begin_src shell
   sudo pacman -S tree
 #+end_src
 
-* sound-setting
+* Sound Setting
 
-** identify-sound-card
+** Identify Sound Card
 Use the command lspci to list all PCI devices and filter for audio devices using the command grep:
 #+begin_src shell
   lspci -v | grep -i audio
@@ -601,8 +519,8 @@ To check the ALSA device:
 #+begin_src shell
   aplay -l
 #+end_src
-** install-necessary-software
 
+** Install Necessary Softwares
 
 ALSA (Advanced Linux Sound Architecture) is the fundamental sound card driver in the Linux kernel.
 #+begin_src shell
@@ -613,7 +531,8 @@ ALSA (Advanced Linux Sound Architecture) is the fundamental sound card driver in
     wireplumber \
     alsa-utils
 #+end_src
-** start-user-level-service
+
+** Start User Level Service
 #+begin_src shell
   systemctl --user enable --now pipewire
   systemctl --user enable --now pipewire-pulse
@@ -625,14 +544,14 @@ To check the staus:
   systemctl --user status pipewire wireplumber
 #+end_src
 
-** configuration-and-enabling-services
+** Configuration and Enabling Services
 Add your user to the audio group to ensure you have permission to access the audio device.
 #+begin_src shell
 sudo usermod -aG audio $(whoami)
 #+end_src
 
 
-** testing-and-debugging
+** Testing And Debugging
 Restarting the computer is the simplest way to ensure all changes take effect.
 
 
@@ -651,7 +570,7 @@ To verify if pipewire has successfully taken over:
 
 
 
-* set-default-browser
+* Set Default Browser
 #+begin_src shell
   # check current default browser
   xdg-settings get default-web-browser
@@ -690,7 +609,7 @@ To verify if pipewire has successfully taken over:
   upower -d  
 #+end_src
 
-* wps
+* WPS
 
 #+begin_src shell
   # install wps
@@ -703,7 +622,7 @@ To verify if pipewire has successfully taken over:
   yay -S ttf-symbola
 #+end_src
 
-* flameshot
+* Flameshot
 
 Installation:
 #+begin_src shell
@@ -736,31 +655,30 @@ Open configuration interface:
 #+end_src
 
 
-* xbacklight
+* Brightness
 #+begin_src shell
-  sudo pacman -S xorg-xbacklight
+  sudo pacman -S brightnessctl
 #+end_src
 
 
 Adjust brightness:
 #+begin_src shell
   # increase brightness by 10%
-  xbacklight -inc 10
+  brightnessctl s 10%+
 
   # decrease brightness by 10%
-  xbacklight -dec 10
+  brightnessctl s 10%-
 
   # set specific brightness value (0-100)
-  xbacklight -set 50
+  brightnessctl s 50%
 #+end_src
 
-* alacritty
+* Alacritty
 #+begin_src lisp
   sudo pacman -S alacritty
 #+end_src
 
-* python
-
+* Python
 
 #+begin_src shell
   # install necessary packages
@@ -775,7 +693,7 @@ Adjust brightness:
   npm install -g pyright
 #+end_src
 
-* libreoffice
+* Libreoffice
 #+begin_src shell
   # new stable version
   sudo pacman -S libreoffice-fresh
@@ -784,7 +702,7 @@ Adjust brightness:
 #+end_src
 
 
-* user
+* User
 #+begin_src shell
   useradd -m -G wheel -s /bin/bash ming
   passwd ming
